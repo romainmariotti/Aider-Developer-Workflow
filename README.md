@@ -170,6 +170,8 @@ Instead of running tests and feeding errors to Aider manually, you can use the `
 ./dev-loop.sh
 ```
 
+> **Windows users:** Run this script in Git Bash (comes with Git for Windows).
+
 This script does the following automatically:
 
 1. Runs `pytest tests/ -v`
