@@ -13,7 +13,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 def get_tasks(session: Session = Depends(get_session)):
     """Get all tasks"""
     tasks = session.exec(select(Task)).all()
-    return "tasks"
+    return tasks
 
 
 @router.get("/{task_id}", response_model=Task)
