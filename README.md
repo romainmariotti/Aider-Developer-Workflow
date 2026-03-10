@@ -15,6 +15,7 @@ This project is part of our **Emerging Technologies** course at HES-SO, demonstr
 - **Aider** — AI coding assistant (uses Claude as LLM backend)
 - **pytest** — Test runner
 - **Ruff** — Linter / formatter
+- **GitHub Actions** — CI/CD pipeline
 
 ---
 
@@ -199,25 +200,84 @@ ruff check --fix app/
 
 ---
 
+## CI/CD Pipeline
+
+Every push and pull request to `main` or `development` triggers a GitHub Actions pipeline that automatically runs linting and tests.
+
+### What the pipeline does
+
+1. Sets up Python 3.12
+2. Installs dependencies from `requirements.txt`
+3. Runs `ruff check app/` — fails the build if there are style issues
+4. Runs `pytest tests/ -v` — fails the build if any tests fail
+
+### Viewing pipeline results
+
+Go to the **Actions** tab in the GitHub repository to see pipeline runs. A green checkmark means linting and tests passed. A red X means something failed — click into the run to see which step failed and what the error was.
+
+### Pipeline configuration
+
+The pipeline is defined in `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run ruff check
+      run: |
+        ruff check app/
+
+    - name: Run tests
+      run: |
+        pytest tests/ -v
+```
+
+---
+
 ## Project Structure
 
 ```
 Aider-Developer-Workflow/
-├── .aider.conf.yml          # Aider config (model, language, settings)
-├── .env                     # API key (create locally, not in Git)
-├── .env.example             # Template for .env
-├── .gitignore               # Files excluded from Git
-├── requirements.txt         # Python dependencies
-├── dev-loop.sh              # Automated TDD loop script
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # GitHub Actions CI pipeline
+├── .aider.conf.yml              # Aider config (model, language, settings)
+├── .env                         # API key (create locally, not in Git)
+├── .env.example                 # Template for .env
+├── .gitignore                   # Files excluded from Git
+├── requirements.txt             # Python dependencies
+├── dev-loop.sh                  # Automated TDD loop script
 ├── app/
-│   ├── __init__.py          # Makes app/ a Python package
-│   ├── database.py          # Database connection and session setup
-│   ├── main.py              # FastAPI app entry point
-│   ├── models.py            # Task data models (ORM + schemas)
-│   └── routes.py            # API endpoints (CRUD operations)
+│   ├── __init__.py              # Makes app/ a Python package
+│   ├── database.py              # Database connection and session setup
+│   ├── main.py                  # FastAPI app entry point
+│   ├── models.py                # Task data models (ORM + schemas)
+│   └── routes.py                # API endpoints (CRUD operations)
 └── tests/
-    ├── __init__.py          # Makes tests/ a Python package
-    └── test_tasks.py        # Test suite
+    ├── __init__.py              # Makes tests/ a Python package
+    └── test_tasks.py            # Test suite
 ```
 
 ---
