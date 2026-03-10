@@ -1,0 +1,11 @@
+#model: ollama_chat/qwen2.5-coder:32b-instruct-q4_K_M
+
+#More expensive model
+model: anthropic/claude-sonnet-4-5-20250929
+
+#Less expensive model
+#model: anthropic/claude-haiku-4-5-20251001
+
+chat-language: English
+dark-mode: true
+auto-commits: false

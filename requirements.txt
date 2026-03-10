@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlmodel
+httpx
+pytest
+pytest-asyncio
+ruff
+aider-chat
