@@ -33,7 +33,7 @@ Make sure you have the following installed before starting:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Aider-Developer-Workflow.git
+git clone https://github.com/romainmariotti/Aider-Developer-Workflow.git
 cd Aider-Developer-Workflow
 ```
 
@@ -58,14 +58,10 @@ pip install -r requirements.txt
 
 This file holds your API key for Aider. It is **not committed to Git** for security reasons, so each team member needs to create their own.
 
-```bash
-cp .env.example .env
-```
-
-Then open `.env` and replace the placeholder with your actual key:
+Create and open `.env` and add the API key.
 
 ```
-ANTHROPIC_API_KEY=your-actual-api-key-here
+ANTHROPIC_API_KEY=your-api-key-here
 ```
 
 > **Important:** Never commit your `.env` file or share your API key in chat messages.
@@ -185,9 +181,5 @@ Aider-Developer-Workflow/
 ## Troubleshooting
 
 **`ModuleNotFoundError`** — Make sure your virtual environment is activated (you see `(.venv)` in your prompt).
-
-**`ImportError: circular import`** — This was fixed by moving database setup into `database.py`. If it reappears, make sure `main.py` and `routes.py` both import from `database.py`, not from each other.
-
-**`SQLite DateTime type only accepts Python datetime`** — The `created_at` field must use `default_factory=datetime.utcnow` in the model, not accept user input.
 
 **Port already in use** — Another process is using port 8000. Either stop it or run on a different port: `uvicorn app.main:app --reload --port 8001`
