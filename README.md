@@ -162,6 +162,25 @@ aider tests/test_tasks.py app/routes.py app/models.py app/database.py
 > Fix the following test failures: [paste pytest output here]
 ```
 
+### Automated TDD Loop (dev-loop.sh)
+
+Instead of running tests and feeding errors to Aider manually, you can use the `dev-loop.sh` script to automate the entire cycle:
+
+```bash
+./dev-loop.sh
+```
+
+> **Windows users:** Run this script in Git Bash (comes with Git for Windows).
+
+This script does the following automatically:
+
+1. Runs `pytest tests/ -v`
+2. If all tests pass, it prints a success message and exits
+3. If any tests fail, it launches Aider with the failure output and lets it fix the code
+4. After Aider finishes, it runs the tests again to verify the fix
+
+This is the core of the AI-assisted TDD workflow — one command handles the full red-green cycle.
+
 ---
 
 ## Linting
@@ -189,6 +208,7 @@ Aider-Developer-Workflow/
 ├── .env.example             # Template for .env
 ├── .gitignore               # Files excluded from Git
 ├── requirements.txt         # Python dependencies
+├── dev-loop.sh              # Automated TDD loop script
 ├── app/
 │   ├── __init__.py          # Makes app/ a Python package
 │   ├── database.py          # Database connection and session setup
