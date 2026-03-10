@@ -125,6 +125,43 @@ Type `/help` inside Aider to see all available commands.
 pytest tests/ -v
 ```
 
+Tests use a **separate in-memory SQLite database** so they never touch your real `tasks.db` data. Each test gets a fresh database via a pytest fixture that overrides the `get_session` dependency.
+
+### Test Cases
+
+| # | Test | Endpoint | Expected |
+|---|------|----------|----------|
+| 1 | Welcome message | `GET /` | 200, returns welcome JSON |
+| 2 | Create a task | `POST /tasks` | 201, returns created task |
+| 3 | List all tasks | `GET /tasks` | 200, returns list of tasks |
+| 4 | Get a specific task | `GET /tasks/{id}` | 200, returns matching task |
+| 5 | Get non-existent task | `GET /tasks/{id}` | 404 |
+| 6 | Update a task | `PUT /tasks/{id}` | 200, returns updated task |
+| 7 | Update non-existent task | `PUT /tasks/{id}` | 404 |
+| 8 | Delete a task | `DELETE /tasks/{id}` | 204, no content |
+| 9 | Delete non-existent task | `DELETE /tasks/{id}` | 404 |
+
+### TDD Workflow with Aider
+
+The tests were generated using Aider following a test-driven development approach:
+
+1. **Red** — Write tests first (they fail because the feature is missing or broken)
+2. **Green** — Feed the test failures back to Aider and let it fix the code
+3. **Refactor** — Clean up the code while keeping tests green
+
+To feed test failures back to Aider:
+
+```bash
+# Run tests and see what fails
+pytest tests/ -v
+
+# Open Aider with the relevant files
+aider tests/test_tasks.py app/routes.py app/models.py app/database.py
+
+# Paste the failure output
+> Fix the following test failures: [paste pytest output here]
+```
+
 ---
 
 ## Linting
