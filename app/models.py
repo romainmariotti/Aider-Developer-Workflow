@@ -9,3 +9,15 @@ class Task(SQLModel, table=True):
     description: Optional[str] = None
     completed: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TaskCreate(SQLModel):
+    title: str
+    description: Optional[str] = None
+    completed: bool = False
+
+
+class TaskUpdate(SQLModel):
+    title: str
+    description: Optional[str] = None
+    completed: bool

@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 
-from app.models import Task
+from app.models import Task, TaskCreate, TaskUpdate
 from app.database import get_session
 
 
@@ -26,8 +26,9 @@ def get_task(task_id: int, session: Session = Depends(get_session)):
 
 
 @router.post("", response_model=Task, status_code=201)
-def create_task(task: Task, session: Session = Depends(get_session)):
+def create_task(task_data: TaskCreate, session: Session = Depends(get_session)):
     """Create a new task"""
+    task = Task.model_validate(task_data)
     session.add(task)
     session.commit()
     session.refresh(task)
@@ -35,15 +36,15 @@ def create_task(task: Task, session: Session = Depends(get_session)):
 
 
 @router.put("/{task_id}", response_model=Task)
-def update_task(task_id: int, task_update: Task, session: Session = Depends(get_session)):
+def update_task(task_id: int, task_data: TaskUpdate, session: Session = Depends(get_session)):
     """Update an existing task"""
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    task.title = task_update.title
-    task.description = task_update.description
-    task.completed = task_update.completed
+    task.title = task_data.title
+    task.description = task_data.description
+    task.completed = task_data.completed
     
     session.add(task)
     session.commit()
