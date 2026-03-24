@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Session, create_engine
 
 # Database setup
-DATABASE_URL = "sqlite:///./tasks.db"
+DATABASE_URL = "sqlite:///./data/tasks.db"
 engine = create_engine(DATABASE_URL, echo=True)
 
 

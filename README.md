@@ -45,7 +45,7 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 ```
 
-> **Windows users:** Use `.venv\Scripts\activate` instead.
+> **Windows users:** Use `py -3.12 -m venv .venv` and `.venv\Scripts\Activate.ps1` instead.
 
 You should see `(.venv)` at the start of your terminal prompt.
 
