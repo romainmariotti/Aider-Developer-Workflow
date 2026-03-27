@@ -26,7 +26,7 @@ if [ ! -f "$COVERAGE_FILE" ]; then
 fi
 
 # Extract coverage percentage
-COVERAGE=$(python3 - <<EOF
+COVERAGE=$(python - <<EOF
 import xml.etree.ElementTree as ET
 tree = ET.parse("$COVERAGE_FILE")
 root = tree.getroot()
