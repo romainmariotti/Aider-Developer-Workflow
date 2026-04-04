@@ -1,0 +1,132 @@
+name: "Requirement / Feature request"
+description: "Capture a new requirement in a structured way (analysis input for the AI workflow)."
+title: "[REQ] "
+labels: ["requirement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Requirement intake
+        Fill this form so the requirement is clear enough for analysis + planning + implementation.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence describing the requirement.
+      placeholder: "Example: Add a /health endpoint that returns DB connectivity status"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / problem
+      description: Why do we need this? What problem does it solve? Who is impacted?
+      placeholder: "- Current situation...\n- Pain points...\n- Target users..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story
+      description: Use the format “As a … I want … so that …”.
+      placeholder: "As a <user>, I want <capability> so that <benefit>."
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list of verifiable criteria (include edge cases if possible).
+      placeholder: |
+        - [ ] Given ..., when ..., then ...
+        - [ ] Returns 200 and JSON body contains ...
+        - [ ] Error case: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Business priority for scheduling.
+      options:
+        - "P0 - Critical (blocks release)"
+        - "P1 - High"
+        - "P2 - Medium"
+        - "P3 - Low"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated size (T-shirt)
+      description: Rough estimate to support planning.
+      options:
+        - "XS"
+        - "S"
+        - "M"
+        - "L"
+        - "XL"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk level
+      description: Technical/functional risk (unknowns, potential regressions, complexity).
+      options:
+        - "Low"
+        - "Medium"
+        - "High"
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints / assumptions
+      description: Tech constraints, deadlines, assumptions, etc.
+      placeholder: "- Must stay compatible with ...\n- Must not add new dependencies...\n- Assumption: ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What explicitly is NOT part of this requirement?
+      placeholder: "- Not doing ...\n- No UI changes..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / related issues
+      description: Link related issues/PRs or external dependencies.
+      placeholder: "- #123\n- Depends on ..."
+    validations:
+      required: false
+
+  - type: input
+    id: milestone
+    attributes:
+      label: Target milestone (optional)
+      description: If you already know the milestone/sprint name, write it here.
+      placeholder: "Sprint-01 / Release-0.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes / screenshots / files
+      description: Any extra info that may help implementation.
+    validations:
+      required: false
