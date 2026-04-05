@@ -1,15 +1,38 @@
-You are given a GitHub issue (requirement or bug).
+IMPORTANT RULES (MUST FOLLOW)
 
-Update ONLY these files:
+- Documentation only. Do NOT implement code.
+- Only modify these 3 files: docs/SPEC.md, docs/ARCHITECTURE.md, docs/DB_SCHEMA.md.
+- Do NOT ask to add any other files.
+- Do NOT create any new files.
+- Do NOT output fenced code blocks (no ```...).
+- API examples must be written as normal sentences or bullet points, never as standalone lines.
 
-- docs/SPEC.md
-- docs/ARCHITECTURE.md
-- docs/DB_SCHEMA.md
+OUTPUT FORMAT
+Write FULL FILE CONTENT for each file using Markdown headings + bullet lists (no code blocks).
 
-Write:
+docs/SPEC.md must include:
 
-1. SPEC.md: refined acceptance criteria, edge cases, API examples, manual verification steps.
-2. ARCHITECTURE.md: high-level design, where code changes should go, DB query approach, error handling.
-3. DB_SCHEMA.md: whether schema changes are needed and why.
+- Title
+- Overview
+- In scope / Out of scope
+- Acceptance criteria (checklist)
+- Edge cases
+- API contract (describe request/response in plain text)
+- Manual verification steps (Swagger steps)
 
-Do not implement code. Documentation only.
+docs/ARCHITECTURE.md must include:
+
+- Overview
+- Where to implement (module/file + route path)
+- DB query approach (in words)
+- Validation / error handling (422 rules)
+- Testing strategy (high level)
+
+docs/DB_SCHEMA.md must include:
+
+- Schema change needed? (Yes/No)
+- Why
+- Future optimization notes (optional)
+
+After writing these 3 files, STOP.
+Now use the GitHub issue below as input and update ONLY the 3 docs files.
