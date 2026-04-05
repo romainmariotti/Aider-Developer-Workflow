@@ -20,8 +20,11 @@ fi
 
 echo "Generating architecture from specification..."
 
-aider "$SPEC_FILE" "$ARCH_FILE" --message "
+# Read the content of spec.md and inject it into the prompt $(<"$SPEC_FILE")
+aider --message "
 Based on the user stories and constraints in this specification :
+
+$(<"$SPEC_FILE")
 
 1. Propose a clear system architecture
 2. Define components (API, services, database, etc.)
@@ -34,6 +37,6 @@ Based on the user stories and constraints in this specification :
 IMPORTANT :
 - Replace the entire content of the file
 - Write clean structured Markdown
-"
+" "$ARCH_FILE"
 
 echo "Architecture generated in $ARCH_FILE"
