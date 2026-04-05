@@ -16,6 +16,8 @@ This project is part of our **Emerging Technologies** course at HES-SO, demonstr
 - **pytest** — Test runner
 - **Ruff** — Linter / formatter
 - **GitHub Actions** — CI/CD pipeline
+- **Docker** — Containerization
+- **Watchtower** — Automatic container updates
 
 ---
 
@@ -202,14 +204,38 @@ ruff check --fix app/
 
 ## CI/CD Pipeline
 
-Every push and pull request to `main` or `development` triggers a GitHub Actions pipeline that automatically runs linting and tests.
+Every push and pull request to `main` or `development` triggers a GitHub Actions pipeline that automatically runs linting and tests. Pushes to `main` additionally build a Docker image and push it to GitHub Container Registry (GHCR) for automatic deployment.
 
 ### What the pipeline does
+
+**On every push/PR (main and development):**
 
 1. Sets up Python 3.12
 2. Installs dependencies from `requirements.txt`
 3. Runs `ruff check app/` — fails the build if there are style issues
 4. Runs `pytest tests/ -v` — fails the build if any tests fail
+
+**On push to main only (after tests pass):**
+
+5. Logs in to GitHub Container Registry
+6. Builds a Docker image from the `Dockerfile`
+7. Pushes the image to `ghcr.io/romainmariotti/aider-developer-workflow:latest`
+
+### Automatic Deployment
+
+The production server runs [Watchtower](https://containrrr.dev/watchtower/), which polls GHCR every 60 seconds for new images. When a new image is detected, Watchtower automatically pulls it and restarts the container — no SSH or manual intervention required.
+
+The full flow:
+
+```
+Push to main
+  → GitHub Actions runs tests + linting
+  → Builds Docker image
+  → Pushes to GHCR
+  → Watchtower detects new image (within 60s)
+  → Pulls and restarts the container
+  → Live at https://taskapi.mberchtold.ch/docs
+```
 
 ### Viewing pipeline results
 
@@ -252,6 +278,32 @@ jobs:
     - name: Run tests
       run: |
         pytest tests/ -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/aider-developer-workflow:latest
 ```
 
 ---
@@ -262,11 +314,12 @@ jobs:
 Aider-Developer-Workflow/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml               # GitHub Actions CI pipeline
+│       └── ci.yml               # GitHub Actions CI/CD pipeline
 ├── .aider.conf.yml              # Aider config (model, language, settings)
 ├── .env                         # API key (create locally, not in Git)
 ├── .env.example                 # Template for .env
 ├── .gitignore                   # Files excluded from Git
+├── Dockerfile                   # Docker image build instructions
 ├── requirements.txt             # Python dependencies
 ├── dev-loop.sh                  # Automated TDD loop script
 ├── app/
