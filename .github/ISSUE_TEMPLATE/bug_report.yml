@@ -1,0 +1,88 @@
+name: "Bug report"
+description: "Report something that is broken."
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug report
+        Provide enough detail so we can reproduce and fix quickly.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence describing the bug.
+      placeholder: "Example: POST /tasks returns 500 when title is empty"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps (include request payloads if relevant).
+      placeholder: |
+        1. Run `...`
+        2. Call `...`
+        3. Observe `...`
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "What should have happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "What actually happened?"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - "S0 - System down / data loss"
+        - "S1 - Major (core feature broken)"
+        - "S2 - Minor (workaround exists)"
+        - "S3 - Cosmetic"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: OS, Python version, branch/commit, Docker or local, etc.
+      placeholder: |
+        - OS:
+        - Python:
+        - Branch/commit:
+        - Docker/local:
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace (optional)
+      description: Paste relevant logs (redact secrets).
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots / additional context (optional)
+    validations:
+      required: false
