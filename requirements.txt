@@ -47,6 +47,7 @@ MarkupSafe==3.0.3
 mccabe==0.7.0
 mdurl==0.1.2
 mixpanel==5.0.0
+mkdocs
 mslex==1.3.0
 multidict==6.7.1
 networkx==3.4.2
