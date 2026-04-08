@@ -1,6 +1,6 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import Session, select
+from fastapi import APIRouter, HTTPException, Depends, Query
+from sqlmodel import Session, select, col
 
 from app.models import Task, TaskCreate, TaskUpdate
 from app.database import get_session
@@ -13,6 +13,23 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 def get_tasks(session: Session = Depends(get_session)):
     """Get all tasks"""
     tasks = session.exec(select(Task)).all()
+    return tasks
+
+
+@router.get("/search", response_model=List[Task])
+def search_tasks(title: str = Query(...), session: Session = Depends(get_session)):
+    """Search tasks by title with partial, case-insensitive matching"""
+    # Validate title is not empty or whitespace-only
+    if not title or not title.strip():
+        raise HTTPException(
+            status_code=422, 
+            detail="Title parameter must be a non-empty string"
+        )
+    
+    # Perform case-insensitive partial match search
+    search_pattern = f"%{title}%"
+    statement = select(Task).where(col(Task.title).ilike(search_pattern))
+    tasks = session.exec(statement).all()
     return tasks
 
 
