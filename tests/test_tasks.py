@@ -151,3 +151,99 @@ def test_delete_task_not_found(client: TestClient):
     response = client.delete("/tasks/999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Task not found"}
+
+
+def test_search_tasks_success(client: TestClient, session: Session):
+    """Test GET /tasks/search returns matching tasks"""
+    # Create test tasks with various titles
+    task1 = Task(title="Buy groceries", description="Get milk and bread")
+    task2 = Task(title="buy milk", description="From the store")
+    task3 = Task(title="BUYING supplies", description="Office supplies")
+    task4 = Task(title="Sell old items", description="Garage sale")
+    session.add(task1)
+    session.add(task2)
+    session.add(task3)
+    session.add(task4)
+    session.commit()
+
+    response = client.get("/tasks/search?title=buy")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 3
+    titles = [task["title"] for task in data]
+    assert "Buy groceries" in titles
+    assert "buy milk" in titles
+    assert "BUYING supplies" in titles
+    assert "Sell old items" not in titles
+
+
+def test_search_tasks_case_insensitive(client: TestClient, session: Session):
+    """Test search is case-insensitive"""
+    task = Task(title="Task Management", description="Manage tasks")
+    session.add(task)
+    session.commit()
+
+    # Search with different cases
+    response1 = client.get("/tasks/search?title=task")
+    response2 = client.get("/tasks/search?title=TASK")
+    response3 = client.get("/tasks/search?title=TaSk")
+    
+    assert response1.status_code == 200
+    assert response2.status_code == 200
+    assert response3.status_code == 200
+    
+    assert len(response1.json()) == 1
+    assert len(response2.json()) == 1
+    assert len(response3.json()) == 1
+    
+    assert response1.json()[0]["title"] == "Task Management"
+
+
+def test_search_tasks_partial_match(client: TestClient, session: Session):
+    """Test search supports partial matching"""
+    task = Task(title="Buy groceries from the store", description="Shopping")
+    session.add(task)
+    session.commit()
+
+    # Search with substring
+    response = client.get("/tasks/search?title=gro")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Buy groceries from the store"
+
+
+def test_search_tasks_empty_results(client: TestClient, session: Session):
+    """Test search returns empty array when no matches found"""
+    task = Task(title="Existing Task", description="Some task")
+    session.add(task)
+    session.commit()
+
+    response = client.get("/tasks/search?title=xyz123notfound")
+    assert response.status_code == 200
+    data = response.json()
+    assert data == []
+
+
+def test_search_tasks_missing_title(client: TestClient):
+    """Test search returns 422 when title parameter is missing"""
+    response = client.get("/tasks/search")
+    assert response.status_code == 422
+    data = response.json()
+    assert "detail" in data
+
+
+def test_search_tasks_empty_title(client: TestClient):
+    """Test search returns 422 when title is empty string"""
+    response = client.get("/tasks/search?title=")
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title parameter must be a non-empty string"
+
+
+def test_search_tasks_whitespace_title(client: TestClient):
+    """Test search returns 422 when title contains only whitespace"""
+    response = client.get("/tasks/search?title=%20%20%20")
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title parameter must be a non-empty string"
