@@ -122,6 +122,46 @@ Type `/help` inside Aider to see all available commands.
 
 ---
 
+## Issues and Documentation
+
+In order to make a change to the application by using our workflow, the developer must start by creating an Issue in GitHub, which will be converted into documentation files that will be used later in the coding part.
+
+### Create issue
+
+1. In the GitHub repository, navigate to `/issues`, and click `New issue`.
+2. Select either `Bug`or `Feature request` according to the current need.
+3. Fill-in the different fields, and click `Create`.
+
+### Generate Documentation from the Issue with Aider
+
+In GitHub, click on the newly created Issue, **copy** its **body**, and **remember** its **ID**.
+
+Now, in the IDE, replace the content of `/inputs/issue.md` with the copied body of the Issue, and save the file.
+
+Run the script with this command (here, 11 is the ID of the Issue) :
+
+**Windows**
+
+```
+.\scripts\analyze_issue.ps1 11
+```
+
+**Mac/Linux**
+
+```
+./scripts/analyze_issue.sh 11
+```
+
+Once the script has finished running, a folder dedicated to the issue is created under `/docs/issues`. Inside this folder, we find three files:
+
+- ARCHITECTURE.md
+- DB_SCHEMA.md
+- SPEC.md
+
+These 3 files will be used in the next step to generate the code that will implement the Issue.
+
+---
+
 ## Running Tests
 
 ```bash
@@ -132,17 +172,17 @@ Tests use a **separate in-memory SQLite database** so they never touch your real
 
 ### Test Cases
 
-| # | Test | Endpoint | Expected |
-|---|------|----------|----------|
-| 1 | Welcome message | `GET /` | 200, returns welcome JSON |
-| 2 | Create a task | `POST /tasks` | 201, returns created task |
-| 3 | List all tasks | `GET /tasks` | 200, returns list of tasks |
-| 4 | Get a specific task | `GET /tasks/{id}` | 200, returns matching task |
-| 5 | Get non-existent task | `GET /tasks/{id}` | 404 |
-| 6 | Update a task | `PUT /tasks/{id}` | 200, returns updated task |
-| 7 | Update non-existent task | `PUT /tasks/{id}` | 404 |
-| 8 | Delete a task | `DELETE /tasks/{id}` | 204, no content |
-| 9 | Delete non-existent task | `DELETE /tasks/{id}` | 404 |
+| #   | Test                     | Endpoint             | Expected                   |
+| --- | ------------------------ | -------------------- | -------------------------- |
+| 1   | Welcome message          | `GET /`              | 200, returns welcome JSON  |
+| 2   | Create a task            | `POST /tasks`        | 201, returns created task  |
+| 3   | List all tasks           | `GET /tasks`         | 200, returns list of tasks |
+| 4   | Get a specific task      | `GET /tasks/{id}`    | 200, returns matching task |
+| 5   | Get non-existent task    | `GET /tasks/{id}`    | 404                        |
+| 6   | Update a task            | `PUT /tasks/{id}`    | 200, returns updated task  |
+| 7   | Update non-existent task | `PUT /tasks/{id}`    | 404                        |
+| 8   | Delete a task            | `DELETE /tasks/{id}` | 204, no content            |
+| 9   | Delete non-existent task | `DELETE /tasks/{id}` | 404                        |
 
 ### TDD Workflow with Aider
 
@@ -299,34 +339,34 @@ name: CI
 
 on:
   push:
-    branches: [ main, development ]
+    branches: [main, development]
   pull_request:
-    branches: [ main, development ]
+    branches: [main, development]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run ruff check
-      run: |
-        ruff check app/
+      - name: Run ruff check
+        run: |
+          ruff check app/
 
-    - name: Run tests
-      run: |
-        pytest tests/ -v
+      - name: Run tests
+        run: |
+          pytest tests/ -v
 
   deploy:
     needs: test
@@ -338,21 +378,21 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/${{ github.repository_owner }}/aider-developer-workflow:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/aider-developer-workflow:latest
 ```
 
 ---
@@ -386,14 +426,14 @@ Aider-Developer-Workflow/
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Welcome message |
-| GET | `/tasks` | List all tasks |
-| GET | `/tasks/{id}` | Get a specific task |
-| POST | `/tasks` | Create a new task |
-| PUT | `/tasks/{id}` | Update a task |
-| DELETE | `/tasks/{id}` | Delete a task |
+| Method | Endpoint      | Description         |
+| ------ | ------------- | ------------------- |
+| GET    | `/`           | Welcome message     |
+| GET    | `/tasks`      | List all tasks      |
+| GET    | `/tasks/{id}` | Get a specific task |
+| POST   | `/tasks`      | Create a new task   |
+| PUT    | `/tasks/{id}` | Update a task       |
+| DELETE | `/tasks/{id}` | Delete a task       |
 
 ---
 
