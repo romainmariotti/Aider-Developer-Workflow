@@ -162,6 +162,36 @@ These 3 files will be used in the next step to generate the code that will imple
 
 ---
 
+## Generate Code from Documentation
+
+Now that we have our documentation files generated in `/docs`, we can feed them to Aider to implement the feature.
+
+### Run script to generate Code from Documentation with Aider
+
+To generate the code by using the Documentation as a base, we just have to run the following script (here, 11 is the ID of the Issue) :
+
+**Windows**
+
+```
+.\scripts\implement_issue.ps1 11
+```
+
+**Mac/Linux**
+
+```
+./scripts/implement_issue.sh 11
+```
+
+This script reads:
+
+- `docs/issues/ISSUE-<id>/SPEC.md`
+- `docs/issues/ISSUE-<id>/ARCHITECTURE.md`
+- `docs/issues/ISSUE-<id>/DB_SCHEMA.md`
+
+and asks Aider to update the codebase. After Aider finishes, the script runs the test suite automatically.
+
+---
+
 ## Running Tests
 
 ```bash
