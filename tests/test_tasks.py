@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
 from app.main import app
@@ -151,6 +151,108 @@ def test_delete_task_not_found(client: TestClient):
     response = client.delete("/tasks/999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Task not found"}
+
+
+def test_create_task_whitespace_only_spaces(client: TestClient):
+    """Test POST /tasks with title containing only spaces returns 422"""
+    task_data = {
+        "title": "   ",
+        "description": "should fail",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title must be a non-empty string"
+
+
+def test_create_task_whitespace_only_tabs(client: TestClient):
+    """Test POST /tasks with title containing only tabs returns 422"""
+    task_data = {
+        "title": "\t\t\t",
+        "description": "should fail",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title must be a non-empty string"
+
+
+def test_create_task_whitespace_mixed(client: TestClient):
+    """Test POST /tasks with mixed whitespace returns 422"""
+    task_data = {
+        "title": " \t \n ",
+        "description": "should fail",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title must be a non-empty string"
+
+
+def test_create_task_empty_string(client: TestClient):
+    """Test POST /tasks with empty string title returns 422"""
+    task_data = {
+        "title": "",
+        "description": "should fail",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title must be a non-empty string"
+
+
+def test_create_task_single_space(client: TestClient):
+    """Test POST /tasks with single space returns 422"""
+    task_data = {
+        "title": " ",
+        "description": "should fail",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["detail"] == "Title must be a non-empty string"
+
+
+def test_create_task_valid_with_surrounding_whitespace(client: TestClient):
+    """Test POST /tasks with valid title containing surrounding whitespace succeeds"""
+    task_data = {
+        "title": "  valid task  ",
+        "description": "should succeed",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == "  valid task  "
+    assert data["description"] == "should succeed"
+    assert data["completed"] is False
+    assert "id" in data
+
+
+def test_create_task_no_database_entry_on_validation_failure(client: TestClient, session: Session):
+    """Test that no task is created in database when validation fails"""
+    # Get initial task count
+    initial_tasks = session.exec(select(Task)).all()
+    initial_count = len(initial_tasks)
+    
+    # Attempt to create task with whitespace-only title
+    task_data = {
+        "title": "   ",
+        "description": "should not be created",
+        "completed": False
+    }
+    response = client.post("/tasks", json=task_data)
+    assert response.status_code == 422
+    
+    # Verify no new task was created
+    final_tasks = session.exec(select(Task)).all()
+    final_count = len(final_tasks)
+    assert final_count == initial_count
 
 
 def test_search_tasks_success(client: TestClient, session: Session):

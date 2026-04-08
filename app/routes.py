@@ -45,6 +45,13 @@ def get_task(task_id: int, session: Session = Depends(get_session)):
 @router.post("", response_model=Task, status_code=201)
 def create_task(task_data: TaskCreate, session: Session = Depends(get_session)):
     """Create a new task"""
+    # Validate title is not empty or whitespace-only
+    if not task_data.title or not task_data.title.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Title must be a non-empty string"
+        )
+    
     task = Task.model_validate(task_data)
     session.add(task)
     session.commit()
