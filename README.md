@@ -96,6 +96,21 @@ In the Swagger UI, try creating a task:
 4. Click **Execute**
 5. You should get a `201` response with the created task
 
+### 7. Access the Frontend
+
+The frontend is automatically served by the FastAPI backend. With the server running, open your browser and navigate to:
+
+- **Frontend UI**: [http://localhost:8000/](http://localhost:8000/)
+- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+The frontend provides a user-friendly interface to:
+- View all tasks
+- Create new tasks
+- Toggle task completion status
+- Delete tasks
+
+All frontend files are located in the `/frontend` folder and are served as static files by FastAPI.
+
 ---
 
 ## Using Aider
