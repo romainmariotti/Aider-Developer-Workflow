@@ -59,6 +59,7 @@ packaging==26.0
 pathspec==1.0.4
 pexpect==4.9.0
 pillow==12.1.1
+pip-audit==2.7.3
 playwright==1.58.0
 pluggy==1.6.0
 posthog==7.8.6
