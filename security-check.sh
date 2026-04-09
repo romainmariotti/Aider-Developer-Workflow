@@ -33,8 +33,7 @@ SHORT_REPORT=$(head -n 50 "$REPORT_FILE")
 # Generate issue content with Aider
 echo "Generating GitHub issue with Aider..."
 
-ISSUE_CONTENT=$(aider --message "
-Analyze the following dependency vulnerability report.
+PROMPT="Analyze the following dependency vulnerability report.
 
 Generate a concise GitHub issue in markdown with:
 
@@ -57,11 +56,11 @@ Be short and actionable.
 
 Report:
 $SHORT_REPORT
-")
+"
 
-# Write output to issue.md file
-echo "$ISSUE_CONTENT" > "$ISSUE_FILE"
+aider --message "$PROMPT" "$ISSUE_FILE"
 
+echo ""
 echo "Issue successfully generated at $ISSUE_FILE !"
 
 # Preview
