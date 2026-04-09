@@ -1,8 +1,9 @@
+#!/usr/bin/env bash
+
 # Mac Script
 
 # Reads docs/issues/ISSUE-<id>/{SPEC,ARCHITECTURE,DB_SCHEMA}.md and implement the feature using Aider.
 
-#!/usr/bin/env bash
 set -euo pipefail
 
 # Usage:
@@ -76,8 +77,8 @@ aider \
   --map-tokens 0 \
   --map-refresh manual \
   --no-detect-urls \
-  "${AUTO_ARGS[@]}" \
-  "${READ_ARGS[@]}" \
+  ${AUTO_ARGS[@]+"${AUTO_ARGS[@]}"} \
+  ${READ_ARGS[@]+"${READ_ARGS[@]}"} \
   --message-file "$TMP_MSG" \
   "${EDIT_FILES[@]}"
 
@@ -85,5 +86,6 @@ rm -f "$TMP_MSG"
 
 echo ""
 echo "▶ Running tests..."
-python -m pytest tests/ -v
+source .venv/bin/activate
+pytest tests/ -v
 echo "✅ Done."

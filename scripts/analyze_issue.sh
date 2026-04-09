@@ -57,11 +57,14 @@ echo "--- ISSUE INPUT END ---" >> "$TMP_MSG"
 
 # Build --read args only if files exist (prevents errors)
 READ_ARGS=()
-[ -f "app/models.py" ] && READ_ARGS+=(--read "app/models.py")
-[ -f "app/routes.py" ] && READ_ARGS+=(--read "app/routes.py")
-[ -f "app/main.py" ] && READ_ARGS+=(--read "app/main.py")
-[ -f "app/database.py" ] && READ_ARGS+=(--read "app/database.py")
-[ -f "tests/test_tasks.py" ] && READ_ARGS+=(--read "tests/test_tasks.py")
+while IFS= read -r file; do
+  READ_ARGS+=(--read "$file")
+done < <(find app tests -type f \( -name "*.py" \) 2>/dev/null)
+
+# Also include top-level config files if they exist
+for f in requirements.txt Dockerfile README.md .github/workflows/ci.yml; do
+  [ -f "$f" ] && READ_ARGS+=(--read "$f")
+done
 
 # Run Aider
 # --map-tokens 0 disables repo-map (less exploration/prompts)
