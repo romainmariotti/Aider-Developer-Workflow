@@ -10,6 +10,8 @@ set -euo pipefail
 TMP_DIR="$(mktemp -d)"
 REPORT_FILE="$TMP_DIR/pip_audit.txt"
 
+ISSUE_FILE="inputs/issue.md"
+
 # Ensure temporary files are always cleaned up on exit
 trap 'rm -rf "$TMP_DIR"' EXIT
 
@@ -26,7 +28,7 @@ echo "Vulnerabilities detected !"
 echo ""
 
 # Truncate the report to avoid sending too much data to Aider
-SHORT_REPORT=$(head -n 200 "$REPORT_FILE")
+SHORT_REPORT=$(head -n 50 "$REPORT_FILE")
 
 # Generate issue content with Aider
 echo "Generating GitHub issue with Aider..."
@@ -34,12 +36,22 @@ echo "Generating GitHub issue with Aider..."
 ISSUE_CONTENT=$(aider --message "
 Analyze the following dependency vulnerability report.
 
-Generate a concise GitHub issue with:
-- Title
-- Summary
-- Severity (Low/Medium/High)
-- Affected packages
-- Recommended fixes
+Generate a concise GitHub issue in markdown with:
+
+## Title
+<short title>
+
+## Summary
+<short summary>
+
+## Severity
+<Low/Medium/High>
+
+## Affected packages
+<bullet list>
+
+## Recommended fixes
+<bullet list>
 
 Be short and actionable.
 
@@ -47,12 +59,10 @@ Report:
 $SHORT_REPORT
 ")
 
-echo "Creating GitHub issue..."
+# Write output to issue.md file
+echo "$ISSUE_CONTENT" > "$ISSUE_FILE"
 
-# Create a new Github issue using the generated content
-echo "$ISSUE_CONTENT" | gh issue create \
-  --title "Vulnerable dependencies detected" \
-  --body-file -
+echo "Issue successfully generated at $ISSUE_FILE !"
 
-echo ""
-echo "Issue created successfully !"
+# Preview
+cat "$ISSUE_FILE"
