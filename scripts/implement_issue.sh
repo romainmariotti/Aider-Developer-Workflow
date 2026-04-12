@@ -72,6 +72,15 @@ AUTO_ARGS=()
 [ "$AUTO_YES" = "--auto-yes" ] && AUTO_ARGS+=(--yes-always)
 
 echo "▶ Implementing ISSUE-$ISSUE_ID from $ISSUE_DIR"
+
+# RED PHASE — CREATE TESTS (EXPECTED FAIL)
+echo "Red phase: generating failing tests..."
+
+RED_PHASE_MSG="$(mktemp)"
+cat "$TMP_MSG" > "$RED_PHASE_MSG"
+echo "" >> "$RED_PHASE_MSG"
+echo "Red phase: Create tests ONLY. Do NOT implement features yet. Tests should fail initially." >> "$RED_PHASE_MSG"
+
 aider \
   --edit-format diff \
   --map-tokens 0 \
@@ -79,13 +88,39 @@ aider \
   --no-detect-urls \
   ${AUTO_ARGS[@]+"${AUTO_ARGS[@]}"} \
   ${READ_ARGS[@]+"${READ_ARGS[@]}"} \
-  --message-file "$TMP_MSG" \
+  --message-file "$RED_PHASE_MSG" \
   "${EDIT_FILES[@]}"
 
+rm -f "$RED_PHASE_MSG"
+
+echo ""
+echo "Running tests (expected to fail)..."
+source .venv/bin/activate
+pytest tests/ -v || true
+
+# GREEN PHASE — IMPLEMENT FIX
+echo ""
+echo "Green phase: implementing feature to pass tests..."
+
+GREEN_PHASE_MSG="$(mktemp)"
+cat "$TMP_MSG" > "$GREEN_PHASE_MSG"
+echo "" >> "$GREEN_PHASE_MSG"
+echo "Green phase: Now implement/fix the code so all tests pass. Do NOT change test intent unless necessary." >> "$GREEN_PHASE_MSG"
+
+aider \
+  --edit-format diff \
+  --map-tokens 0 \
+  --map-refresh manual \
+  --no-detect-urls \
+  ${AUTO_ARGS[@]+"${AUTO_ARGS[@]}"} \
+  ${READ_ARGS[@]+"${READ_ARGS[@]}"} \
+  --message-file "$GREEN_PHASE_MSG" \
+  "${EDIT_FILES[@]}"
+
+rm -f "$GREEN_PHASE_MSG"
 rm -f "$TMP_MSG"
 
 echo ""
-echo "▶ Running tests..."
-source .venv/bin/activate
-pytest tests/ -v
-echo "✅ Done."
+echo "Running tests again..."
+pytest tests -v
+echo "Done"
