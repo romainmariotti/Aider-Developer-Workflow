@@ -287,7 +287,7 @@ ruff check --fix app/
 Instead of running lint checks and fixing issues manually, you can use the lint-fix.sh script to automate the entire process:
 
 ```bash
-./lint-fix.sh
+./scripts/lint-fix.sh
 ```
 
 > **Windows users:** Run this script in Git Bash (comes with Git for Windows).
@@ -297,8 +297,9 @@ This script does the following automatically:
 1. Runs ruff check app/ to detect lint issues
 2. If no issues are found, it prints a success message and exits
 3. If issues are detected, it attempts to fix them automatically with ruff check app/ --fix
-4. It re-runs the lint check to verify if all issues were fixed
-5. If issues still remain, it sends the lint errors to Aider so it can fix them without changing functionality
+4. It re-runs the lint check to verify whether all issues were resolved
+5. If issues still remain, it sends the remaining lint report to Aider
+6. Aider analyzes the remaining issues and applies fixes only where Ruff could not fix them automatically, without introducing unrelated changes
 
 ---
 
