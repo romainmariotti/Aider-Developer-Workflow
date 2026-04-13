@@ -306,28 +306,29 @@ This script does the following automatically:
 ### Automated Test Coverage Loop (coverage-check.sh)
 
 To ensure that the project maintains a healthy level of test coverage, this repository includes an automated coverage script.
-Similar to the TDD loop and lint-fix loop, this script monitors your test coverage and uses Aider to improve tests whenever coverage falls below a configurable threshold.
+
+This script runs tests, evaluates coverage, and uses Aider to generate recommendations only when coverage is below the configured threshold.
 
 ```bash
-./coverage-check.sh
+./scripts/coverage-check.sh
 ```
 
 You can also specify a custom minimum coverage percentage (default is 80%):
 
 ```bash
-./coverage-check.sh 90
+./scripts/coverage-check.sh 90
 ```
 
 > **Windows users:** Run this script in Git Bash (comes with Git for Windows).
 
 What the script does:
 
-1. Generates an XML coverage report using pytest
-2. Extracts the total line coverage percentage
+1. Runs tests with pytest and coverage reporting in the terminal
+2. Extracts the total line coverage percentage from the output
 3. Compares it to the threshold
-4. If coverage is high enough → nothing to do
-5. If coverage is too low → automatically launches Aider with a prompt to improve the tests
-6. Automatically skips the Aider step in CI environments (CI=true) to avoid infinite loops
+4. If coverage is high enough → exit immediately
+5. If coverage is too low → automatically launches Aider to give recommendations
+6. The Aider output contains only recommendations (no code, no test examples)
 7. Cleans up temporary coverage files
 
 This script integrates seamlessly into the AI-assisted dev workflow by continuously enforcing test quality while preserving developer productivity.

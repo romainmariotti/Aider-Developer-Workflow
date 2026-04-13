@@ -1,54 +1,74 @@
 #!/bin/bash
+set -euo pipefail
 
-# Configuration
-THRESHOLD=${1:-80} # 80% by default
-COVERAGE_FILE="temp/coverage.xml"
+THRESHOLD=${1:-80}
+TMP_DIR="temp"
+REPORT_FILE="$TMP_DIR/coverage_recommendations.md"
 
-# Create temp folder
-mkdir -p temp
+mkdir -p "$TMP_DIR"
 
-echo "Generating coverage report..."
+echo "Running tests with coverage..."
 
-# Run pytest with XML coverage report
-pytest --cov=app --cov-report=xml:$COVERAGE_FILE --cov-report=term
-STATUS=$?
+OUTPUT=$(pytest --cov=app --cov-report=term || true)
 
-# Stop if pytest fails
-if [ $STATUS -ne 0 ]; then
-  echo "Pytest failed — stopping coverage check."
+echo "$OUTPUT"
+
+# Extract coverage %
+COVERAGE=$(echo "$OUTPUT" | grep -Eo '[0-9]+%' | tail -1 | tr -d '%')
+
+if [ -z "$COVERAGE" ]; then
+  echo "Could not extract coverage"
   exit 1
 fi
 
-# Ensure coverage.xml exists
-if [ ! -f "$COVERAGE_FILE" ]; then
-  echo "Coverage report not found: $COVERAGE_FILE"
-  exit 1
-fi
+echo "Coverage: ${COVERAGE}%"
 
-# Extract coverage percentage
-COVERAGE=$(python - <<EOF
-import xml.etree.ElementTree as ET
-tree = ET.parse("$COVERAGE_FILE")
-root = tree.getroot()
-print(int(float(root.attrib["line-rate"]) * 100))
-EOF
-)
+# Ok case (clean exit)
+if [ "$COVERAGE" -ge "$THRESHOLD" ]; then
+  echo "Coverage sufficient (${COVERAGE}% ≥ ${THRESHOLD}%)."
 
-echo "Actual coverage: ${COVERAGE}%"
+  # Cleanup
+  rm -f .coverage
 
-#  Skip Aider in CI environments to avoid infinite loops
-if [ "${CI}" = "true" ]; then
-  echo "Running in CI — skipping Aider auto-fix."
   exit 0
 fi
 
-# Trigger Aider if below the threshold
-if [ "${COVERAGE}" -lt "${THRESHOLD}" ]; then
-  echo "Coverage < ${THRESHOLD}%. Asking Aider to improve tests..."
-  aider app/ --message "Improve tests to reach at least ${THRESHOLD}% coverage"
-else
-  echo "Coverage is above threshold (${THRESHOLD}%). No action needed"
-fi
+# Fail case
+GAP=$((THRESHOLD - COVERAGE))
 
-# Clean up temp file
-rm -f "$COVERAGE_FILE"
+echo "Coverage below threshold. Generating AI recommendations..."
+
+PROMPT="Give recommendation to improve coverage and reach target.
+
+Coverage is below target.
+
+Current coverage: ${COVERAGE}%
+Target: ${THRESHOLD}%
+Gap: ${GAP}%
+
+Your task:
+- ONLY provide recommendations
+- DO NOT write any code
+- DO NOT include pytest examples
+- DO NOT include snippets or pseudo-code
+- DO NOT include implementation details
+
+Return a clean markdown report with:
+
+## Summary
+## Key issues in test coverage
+## Missing test areas (conceptual only)
+## Risk areas in the codebase
+## Prioritized action plan
+
+Be concise, practical, and non-technical in terms of code.
+Focus on WHAT to test, not HOW to write tests.
+"
+
+aider --message "$PROMPT" "$REPORT_FILE"
+
+echo "Aider report generated:"
+cat "$REPORT_FILE"
+
+# Final cleanup
+rm -f .coverage
