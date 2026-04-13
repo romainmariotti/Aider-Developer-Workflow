@@ -491,21 +491,6 @@ Aider-Developer-Workflow/
 
 ---
 
-## API Endpoints
-
-| Method | Endpoint                   | Description                      |
-| ------ | -------------------------- | -------------------------------- |
-| GET    | `/`                        | Serve frontend or welcome message|
-| GET    | `/tasks`                   | List all tasks                   |
-| GET    | `/tasks/search?title=...`  | Search tasks by title            |
-| GET    | `/tasks/{id}`              | Get a specific task              |
-| POST   | `/tasks`                   | Create a new task                |
-| POST   | `/tasks/{id}/duplicate`    | Duplicate an existing task       |
-| PUT    | `/tasks/{id}`              | Update a task                    |
-| DELETE | `/tasks/{id}`              | Delete a task                    |
-
----
-
 ## Troubleshooting
 
 **`ModuleNotFoundError`** — Make sure your virtual environment is activated (you see `(.venv)` in your prompt).
