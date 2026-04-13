@@ -104,6 +104,7 @@ The frontend is automatically served by the FastAPI backend. With the server run
 - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 The frontend provides a user-friendly interface to:
+
 - View all tasks
 - Create new tasks
 - Toggle task completion status
@@ -144,7 +145,7 @@ In order to make a change to the application by using our workflow, the develope
 ### Create issue
 
 1. In the GitHub repository, navigate to `/issues`, and click `New issue`.
-2. Select either `Bug`or `Feature request` according to the current need.
+2. Select either `Bug` or `Feature request` according to the current need.
 3. Fill-in the different fields, and click `Create`.
 
 ### Generate Documentation from the Issue with Aider
@@ -154,14 +155,6 @@ In GitHub, click on the newly created Issue, **copy** its **body**, and **rememb
 Now, in the IDE, replace the content of `/inputs/issue.md` with the copied body of the Issue, and save the file.
 
 Run the script with this command (here, 11 is the ID of the Issue) :
-
-**Windows**
-
-```
-.\scripts\analyze_issue.ps1 11
-```
-
-**Mac/Linux**
 
 ```
 ./scripts/analyze_issue.sh 11
@@ -177,33 +170,31 @@ These 3 files will be used in the next step to generate the code that will imple
 
 ---
 
-## Generate Code from Documentation
+## Generate Code from Documentation (TDD Workflow)
 
-Now that we have our documentation files generated in `/docs`, we can feed them to Aider to implement the feature.
+Once the issue documentation is generated in `docs/issues/ISSUE-<id>/`, we can implement the change using Aider.
 
-### Run script to generate Code from Documentation with Aider
+### Run the implementation script
 
-To generate the code by using the Documentation as a base, we just have to run the following script (here, 11 is the ID of the Issue) :
+This script reads the 3 docs files and applies an automated **TDD cycle**:
 
-**Windows**
+- **RED**: generate/adjust tests first (expected to fail)
+- **GREEN**: implement the code until all tests pass
+- **REFACTOR**: cleanup/refactor without changing behavior, then re-run tests
 
-```
-.\scripts\implement_issue.ps1 11
-```
-
-**Mac/Linux**
+Run the script (here, 11 is the Issue ID):
 
 ```
 ./scripts/implement_issue.sh 11
 ```
 
-This script reads:
+The script uses these inputs:
 
 - `docs/issues/ISSUE-<id>/SPEC.md`
 - `docs/issues/ISSUE-<id>/ARCHITECTURE.md`
 - `docs/issues/ISSUE-<id>/DB_SCHEMA.md`
 
-and asks Aider to update the codebase. After Aider finishes, the script runs the test suite automatically.
+At the end, it runs the full test suite automatically and exits successfully only if all tests pass.
 
 ---
 
@@ -231,11 +222,13 @@ Tests use a **separate in-memory SQLite database** so they never touch your real
 
 ### TDD Workflow with Aider
 
-The tests were generated using Aider following a test-driven development approach:
+The project follows a test-driven development approach:
 
-1. **Red** — Write tests first (they fail because the feature is missing or broken)
-2. **Green** — Feed the test failures back to Aider and let it fix the code
-3. **Refactor** — Clean up the code while keeping tests green
+1. **Red** — Write tests first
+2. **Green** — Implement code until tests pass
+3. **Refactor** — Clean up while staying green
+
+This workflow is automated in `./scripts/implement_issue.sh`, but you can also do it manually if needed.
 
 To feed test failures back to Aider:
 
@@ -249,25 +242,6 @@ aider tests/test_tasks.py app/routes.py app/models.py app/database.py
 # Paste the failure output
 > Fix the following test failures: [paste pytest output here]
 ```
-
-### Automated TDD Loop (dev-loop.sh)
-
-Instead of running tests and feeding errors to Aider manually, you can use the `dev-loop.sh` script to automate the entire cycle:
-
-```bash
-./dev-loop.sh
-```
-
-> **Windows users:** Run this script in Git Bash (comes with Git for Windows).
-
-This script does the following automatically:
-
-1. Runs `pytest tests/ -v`
-2. If all tests pass, it prints a success message and exits
-3. If any tests fail, it launches Aider with the failure output and lets it fix the code
-4. After Aider finishes, it runs the tests again to verify the fix
-
-This is the core of the AI-assisted TDD workflow — one command handles the full red-green cycle.
 
 ---
 
