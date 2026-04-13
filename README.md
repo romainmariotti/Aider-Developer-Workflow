@@ -208,17 +208,40 @@ Tests use a **separate in-memory SQLite database** so they never touch your real
 
 ### Test Cases
 
-| #   | Test                     | Endpoint             | Expected                   |
-| --- | ------------------------ | -------------------- | -------------------------- |
-| 1   | Welcome message          | `GET /`              | 200, returns welcome JSON  |
-| 2   | Create a task            | `POST /tasks`        | 201, returns created task  |
-| 3   | List all tasks           | `GET /tasks`         | 200, returns list of tasks |
-| 4   | Get a specific task      | `GET /tasks/{id}`    | 200, returns matching task |
-| 5   | Get non-existent task    | `GET /tasks/{id}`    | 404                        |
-| 6   | Update a task            | `PUT /tasks/{id}`    | 200, returns updated task  |
-| 7   | Update non-existent task | `PUT /tasks/{id}`    | 404                        |
-| 8   | Delete a task            | `DELETE /tasks/{id}` | 204, no content            |
-| 9   | Delete non-existent task | `DELETE /tasks/{id}` | 404                        |
+| #   | Test                                      | Endpoint                      | Expected                                    |
+| --- | ----------------------------------------- | ----------------------------- | ------------------------------------------- |
+| 1   | Welcome message                           | `GET /`                       | 200, returns welcome JSON or HTML           |
+| 2   | Create a task                             | `POST /tasks`                 | 201, returns created task                   |
+| 3   | List all tasks                            | `GET /tasks`                  | 200, returns list of tasks                  |
+| 4   | Get a specific task                       | `GET /tasks/{id}`             | 200, returns matching task                  |
+| 5   | Get non-existent task                     | `GET /tasks/{id}`             | 404                                         |
+| 6   | Update a task                             | `PUT /tasks/{id}`             | 200, returns updated task                   |
+| 7   | Update non-existent task                  | `PUT /tasks/{id}`             | 404                                         |
+| 8   | Delete a task                             | `DELETE /tasks/{id}`          | 204, no content                             |
+| 9   | Delete non-existent task                  | `DELETE /tasks/{id}`          | 404                                         |
+| 10  | Create task with whitespace-only title    | `POST /tasks`                 | 422, validation error                       |
+| 11  | Create task with empty title              | `POST /tasks`                 | 422, validation error                       |
+| 12  | Create task with valid title + whitespace | `POST /tasks`                 | 201, returns created task                   |
+| 13  | No DB entry on validation failure         | `POST /tasks`                 | 422, no task created in database            |
+| 14  | Search tasks by title                     | `GET /tasks/search?title=...` | 200, returns matching tasks                 |
+| 15  | Search case-insensitive                   | `GET /tasks/search?title=...` | 200, returns matching tasks                 |
+| 16  | Search partial match                      | `GET /tasks/search?title=...` | 200, returns matching tasks                 |
+| 17  | Search with no matches                    | `GET /tasks/search?title=...` | 200, returns empty array                    |
+| 18  | Search with missing title                 | `GET /tasks/search`           | 422, validation error                       |
+| 19  | Search with empty title                   | `GET /tasks/search?title=`    | 422, validation error                       |
+| 20  | Search with whitespace title              | `GET /tasks/search?title=...` | 422, validation error                       |
+| 21  | Duplicate task success                    | `POST /tasks/{id}/duplicate`  | 201, returns new task with "(copy)" suffix  |
+| 22  | Duplicate task different ID               | `POST /tasks/{id}/duplicate`  | 201, new task has different ID              |
+| 23  | Duplicate task title suffix               | `POST /tasks/{id}/duplicate`  | 201, title has " (copy)" appended           |
+| 24  | Duplicate task description copied         | `POST /tasks/{id}/duplicate`  | 201, description matches original           |
+| 25  | Duplicate task completed false            | `POST /tasks/{id}/duplicate`  | 201, completed is false                     |
+| 26  | Duplicate task new timestamp              | `POST /tasks/{id}/duplicate`  | 201, has valid created_at                   |
+| 27  | Duplicate non-existent task               | `POST /tasks/{id}/duplicate`  | 404                                         |
+| 28  | Duplicate task null description           | `POST /tasks/{id}/duplicate`  | 201, description is null                    |
+| 29  | Duplicate task original unchanged         | `POST /tasks/{id}/duplicate`  | 201, original task not modified             |
+| 30  | Duplicate task both in database           | `POST /tasks/{id}/duplicate`  | 201, both tasks exist in DB                 |
+| 31  | Duplicate already copied task             | `POST /tasks/{id}/duplicate`  | 201, appends another "(copy)"               |
+| 32  | Duplicate task with long title            | `POST /tasks/{id}/duplicate`  | 201, suffix still appended                  |
 
 ### TDD Workflow with Aider
 
@@ -421,38 +444,65 @@ jobs:
 ```
 Aider-Developer-Workflow/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml       # Bug report issue template
+│   │   ├── config.yml           # Issue template configuration
+│   │   └── requirement.yml      # Feature request issue template
 │   └── workflows/
 │       └── ci.yml               # GitHub Actions CI/CD pipeline
 ├── .aider.conf.yml              # Aider config (model, language, settings)
 ├── .env                         # API key (create locally, not in Git)
-├── .env.example                 # Template for .env
 ├── .gitignore                   # Files excluded from Git
 ├── Dockerfile                   # Docker image build instructions
+├── README.md                    # This file
 ├── requirements.txt             # Python dependencies
-├── dev-loop.sh                  # Automated TDD loop script
 ├── app/
 │   ├── __init__.py              # Makes app/ a Python package
 │   ├── database.py              # Database connection and session setup
-│   ├── main.py                  # FastAPI app entry point
+│   ├── main.py                  # FastAPI app entry point + static file serving
 │   ├── models.py                # Task data models (ORM + schemas)
-│   └── routes.py                # API endpoints (CRUD operations)
+│   └── routes.py                # API endpoints (CRUD + search + duplicate)
+├── docs/
+│   └── issues/
+│       ├── ISSUE-6/             # Task search feature documentation
+│       ├── ISSUE-11/            # Whitespace validation documentation
+│       ├── ISSUE-15/            # Web frontend documentation
+│       └── ISSUE-18/            # Task duplication documentation
+├── frontend/
+│   ├── app.js                   # Frontend JavaScript (API calls, DOM)
+│   ├── index.html               # Frontend HTML structure
+│   └── style.css                # Frontend CSS styling
+├── inputs/
+│   └── issue.md                 # Temporary file for issue body input
+├── prompts/
+│   ├── docs_to_code.md          # Prompt for code implementation
+│   └── issue_to_docs.md         # Prompt for docs generation
+├── scripts/
+│   ├── analyze_issue.sh         # Generate docs from GitHub issue
+│   ├── coverage-check.sh        # Automated test coverage loop
+│   ├── implement_issue.sh       # Automated TDD implementation
+│   ├── lint-fix.sh              # Automated linting loop
+│   ├── security-check.sh        # Dependency vulnerability scanning
+│   └── setup.sh                 # Initial project setup script
 └── tests/
     ├── __init__.py              # Makes tests/ a Python package
-    └── test_tasks.py            # Test suite
+    └── test_tasks.py            # Comprehensive test suite (42 tests)
 ```
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint      | Description         |
-| ------ | ------------- | ------------------- |
-| GET    | `/`           | Welcome message     |
-| GET    | `/tasks`      | List all tasks      |
-| GET    | `/tasks/{id}` | Get a specific task |
-| POST   | `/tasks`      | Create a new task   |
-| PUT    | `/tasks/{id}` | Update a task       |
-| DELETE | `/tasks/{id}` | Delete a task       |
+| Method | Endpoint                   | Description                      |
+| ------ | -------------------------- | -------------------------------- |
+| GET    | `/`                        | Serve frontend or welcome message|
+| GET    | `/tasks`                   | List all tasks                   |
+| GET    | `/tasks/search?title=...`  | Search tasks by title            |
+| GET    | `/tasks/{id}`              | Get a specific task              |
+| POST   | `/tasks`                   | Create a new task                |
+| POST   | `/tasks/{id}/duplicate`    | Duplicate an existing task       |
+| PUT    | `/tasks/{id}`              | Update a task                    |
+| DELETE | `/tasks/{id}`              | Delete a task                    |
 
 ---
 
