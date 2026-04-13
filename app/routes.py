@@ -76,6 +76,48 @@ def update_task(task_id: int, task_data: TaskUpdate, session: Session = Depends(
     return task
 
 
+@router.post("/{task_id}/duplicate", response_model=Task, status_code=201)
+def duplicate_task(task_id: int, session: Session = Depends(get_session)):
+    """Duplicate an existing task"""
+    # Get the original task
+    original_task = session.get(Task, task_id)
+    if not original_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Create a new task with modified fields
+    new_task = Task(
+        title=original_task.title + " (copy)",
+        description=original_task.description,
+        completed=False
+    )
+    
+    session.add(new_task)
+    session.commit()
+    session.refresh(new_task)
+    return new_task
+
+
+@router.post("/{task_id}/duplicate", response_model=Task, status_code=201)
+def duplicate_task(task_id: int, session: Session = Depends(get_session)):
+    """Duplicate an existing task"""
+    # Get the original task
+    original_task = session.get(Task, task_id)
+    if not original_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Create a new task with modified fields
+    new_task = Task(
+        title=original_task.title + " (copy)",
+        description=original_task.description,
+        completed=False
+    )
+    
+    session.add(new_task)
+    session.commit()
+    session.refresh(new_task)
+    return new_task
+
+
 @router.delete("/{task_id}", status_code=204)
 def delete_task(task_id: int, session: Session = Depends(get_session)):
     """Delete a task"""

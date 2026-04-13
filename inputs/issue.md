@@ -1,65 +1,59 @@
-### Summary
+Summary
+Add a “Duplicate” feature that creates a new task by copying an existing one (same title/description), via a dedicated API endpoint and a button in the frontend.
 
-Build a minimal web frontend that lets users view, create, update, and delete tasks via the existing Task API.
+Context / problem
+Current situation: Users can create, list, update, and delete tasks.
+Pain point: Users often want to reuse an existing task as a template (same title/description) without retyping it.
+Target users: Web UI users and API consumers who want fast task cloning.
+User story
+As a user, I want to duplicate a task so that I can quickly create a copy and then edit it instead of recreating it from scratch.
 
-### Context / problem
-
-- Current situation: The Task API only exposes endpoints via Swagger UI at /docs, which is a developer tool and not suitable for end users.
-- Pain points: Non-technical users cannot interact with the API without manually crafting HTTP requests or using Swagger's technical interface.
-- Target users: Anyone who wants to manage their tasks through a clean, browser-based interface without touching the API directly.
-
-### User story
-
-As a user, I want a simple web interface for the Task API so that I can manage my tasks without using Swagger UI or technical tools.
-
-### Acceptance criteria
-
-- [ ] Given the frontend is loaded, when the page opens, then all existing tasks are fetched from GET /tasks and displayed in a list
-- [ ] Given a user fills in the "new task" form, when they submit it, then POST /tasks is called and the new task appears in the list
-- [ ] Given a task is displayed, when the user clicks a checkbox, then PUT /tasks/{id} toggles its completed status
-- [ ] Given a task is displayed, when the user clicks the delete button, then DELETE /tasks/{id} removes it from the list
-- [ ] Given the API returns an error, when it occurs, then a user-friendly error message is shown
-- [ ] The frontend is served as a static page (HTML + CSS + JS) or as a separate container in docker-compose
-
-### Priority
-
+Acceptance criteria
+Backend (API)
+A new endpoint exists: POST /tasks/{task_id}/duplicate
+If the original task exists, the endpoint returns HTTP 201 with the newly created Task object.
+If the original task does not exist, the endpoint returns HTTP 404 (same style as other “not found” cases).
+The original task is not modified.
+The duplicated task fields:
+title is copied from the original, but with a suffix (copy) appended (example: “Buy milk” → “Buy milk (copy)”)
+description is copied as-is (can be null)
+completed is set to false (so the copy starts as a new actionable task)
+created_at is set to “now” (new timestamp for the copy)
+The endpoint appears in Swagger/OpenAPI docs.
+Frontend (UI)
+Each task item in the list shows a Duplicate button (near Edit/Delete).
+Clicking Duplicate calls POST /tasks/{id}/duplicate.
+After success, the UI refreshes and shows the new duplicated task in the list.
+On error, show an error message using the existing frontend error handling.
+Tests (TDD)
+Add tests that initially fail (Red), then pass after implementation (Green):
+Duplicating an existing task returns 201 and creates a new task with a different id.
+The new title ends with (copy).
+The new task has the same description, completed=false, and a valid created_at.
+Duplicating a non-existent task returns 404.
+Existing endpoints still work unchanged.
+Priority
 P2 - Medium
 
-### Estimated size (T-shirt)
+Estimated size (T-shirt)
+M
 
-L
-
-### Risk level
-
+Risk level
 Low
 
-### Constraints / assumptions
+Constraints / assumptions
+Must reuse the existing Task model and SQLite database (no schema changes).
+Keep backward compatibility (no changes to existing endpoints’ contracts).
+No new dependencies.
+Out of scope
+No bulk duplication (only one task at a time).
+No duplication of extra metadata beyond current Task fields.
+No authentication/authorization.
+Dependencies / related issues
+Depends on current Task CRUD endpoints and DB session setup.
+Target milestone (optional)
+Sprint-01
 
-- Must work with the existing Task API without changes to the backend
-- Should stay lightweight — no heavy frameworks required (vanilla JS or a small framework like Alpine.js / HTMX is preferred)
-- Must handle CORS correctly if served from a different origin than the API
-- Assumption: The frontend will be deployed alongside the API on the same server
-
-### Out of scope
-
-- User authentication / login
-- Multi-user support
-- Task categories, tags, or filtering beyond basic list view
-- Mobile-specific optimizations
-- Dark/light theme toggle
-
-### Dependencies / related issues
-
-- Depends on: Task API (already implemented)
-- Related: CORS configuration may need to be added to the backend if frontend is served on a different origin
-
-### Target milestone (optional)
-
-_No response_
-
-### Additional notes / screenshots / files
-
-Suggested tech: plain HTML/CSS/JS or HTMX for simplicity. Could be deployed as a static site via Nginx in the same docker-compose stack as the API, accessible at tasks.mberchtold.ch or similar.
-
-add changes to the current readme file
-The frontend should be in a /frontend folder in the root
+Additional notes / screenshots / files
+Manual API test: create a task, then call POST /tasks/{id}/duplicate and verify a new task appears in GET /tasks.
+Manual UI test: click Duplicate and verify a new “(copy)” task appears and is not completed.

@@ -355,3 +355,196 @@ def test_search_tasks_whitespace_title(client: TestClient):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"] == "Title parameter must be a non-empty string"
+
+
+def test_duplicate_task_success(client: TestClient, session: Session):
+    """Test POST /tasks/{id}/duplicate creates a new task and returns 201"""
+    # Create original task
+    original = Task(title="Original Task", description="Original Description", completed=True)
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    # Verify new task has different id
+    assert data["id"] != original.id
+    assert "id" in data
+    
+    # Verify title has " (copy)" suffix
+    assert data["title"] == "Original Task (copy)"
+    
+    # Verify description is copied
+    assert data["description"] == "Original Description"
+    
+    # Verify completed is false
+    assert data["completed"] is False
+    
+    # Verify created_at exists
+    assert "created_at" in data
+
+
+def test_duplicate_task_different_id(client: TestClient, session: Session):
+    """Test duplicated task has different id from original"""
+    original = Task(title="Test Task", description="Test")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["id"] != original.id
+
+
+def test_duplicate_task_title_suffix(client: TestClient, session: Session):
+    """Test duplicated task title has ' (copy)' suffix appended"""
+    original = Task(title="My Task", description="Description")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["title"] == "My Task (copy)"
+
+
+def test_duplicate_task_description_copied(client: TestClient, session: Session):
+    """Test duplicated task has same description as original"""
+    original = Task(title="Task", description="Important details here")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["description"] == "Important details here"
+
+
+def test_duplicate_task_completed_false(client: TestClient, session: Session):
+    """Test duplicated task has completed set to false even if original was true"""
+    original = Task(title="Completed Task", description="Done", completed=True)
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["completed"] is False
+
+
+def test_duplicate_task_new_timestamp(client: TestClient, session: Session):
+    """Test duplicated task has valid created_at timestamp"""
+    original = Task(title="Task", description="Test")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert "created_at" in data
+    # Verify it's a valid timestamp string
+    from datetime import datetime
+    datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+
+
+def test_duplicate_task_not_found(client: TestClient):
+    """Test POST /tasks/{id}/duplicate returns 404 for non-existent task"""
+    response = client.post("/tasks/999/duplicate")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Task not found"}
+
+
+def test_duplicate_task_null_description(client: TestClient, session: Session):
+    """Test duplicating task with null description works correctly"""
+    original = Task(title="Task without description", description=None)
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["description"] is None
+
+
+def test_duplicate_task_original_unchanged(client: TestClient, session: Session):
+    """Test that original task is not modified after duplication"""
+    original = Task(title="Original", description="Original Desc", completed=True)
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    original_id = original.id
+    
+    response = client.post(f"/tasks/{original_id}/duplicate")
+    assert response.status_code == 201
+    
+    # Verify original task is unchanged
+    session.expire_all()
+    original_after = session.get(Task, original_id)
+    assert original_after.title == "Original"
+    assert original_after.description == "Original Desc"
+    assert original_after.completed is True
+
+
+def test_duplicate_task_both_in_database(client: TestClient, session: Session):
+    """Test that database contains both original and duplicate after operation"""
+    original = Task(title="Task", description="Desc")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    original_id = original.id
+    
+    response = client.post(f"/tasks/{original_id}/duplicate")
+    assert response.status_code == 201
+    duplicate_id = response.json()["id"]
+    
+    # Verify both tasks exist in database
+    session.expire_all()
+    all_tasks = session.exec(select(Task)).all()
+    task_ids = [task.id for task in all_tasks]
+    
+    assert original_id in task_ids
+    assert duplicate_id in task_ids
+    assert len([t for t in all_tasks if t.id in [original_id, duplicate_id]]) == 2
+
+
+def test_duplicate_task_already_copy(client: TestClient, session: Session):
+    """Test duplicating a task that was already a copy appends another suffix"""
+    original = Task(title="Task (copy)", description="Already a copy")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["title"] == "Task (copy) (copy)"
+
+
+def test_duplicate_task_long_title(client: TestClient, session: Session):
+    """Test duplicating a task with a very long title still appends suffix"""
+    long_title = "A" * 200
+    original = Task(title=long_title, description="Test")
+    session.add(original)
+    session.commit()
+    session.refresh(original)
+    
+    response = client.post(f"/tasks/{original.id}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    
+    assert data["title"] == long_title + " (copy)"
