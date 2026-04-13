@@ -70,9 +70,11 @@ function renderTasks(tasks) {
     // Attach event listeners
     tasks.forEach(task => {
         const checkbox = document.getElementById(`checkbox-${task.id}`);
+        const duplicateBtn = document.getElementById(`duplicate-${task.id}`);
         const deleteBtn = document.getElementById(`delete-${task.id}`);
         
         checkbox.addEventListener('change', () => handleToggleComplete(task));
+        duplicateBtn.addEventListener('click', () => handleDuplicateTask(task.id));
         deleteBtn.addEventListener('click', () => handleDeleteTask(task.id));
     });
 }
@@ -97,6 +99,7 @@ function createTaskHTML(task) {
                 <div class="task-meta">Created: ${createdDate}</div>
             </div>
             <div class="task-actions">
+                <button class="duplicate-btn" id="duplicate-${task.id}">Duplicate</button>
                 <button class="delete-btn" id="delete-${task.id}">Delete</button>
             </div>
         </div>
@@ -203,6 +206,45 @@ async function handleToggleComplete(task) {
     } finally {
         checkbox.disabled = false;
         deleteBtn.disabled = false;
+    }
+}
+
+// Handle duplicate task
+async function handleDuplicateTask(taskId) {
+    const duplicateBtn = document.getElementById(`duplicate-${taskId}`);
+    const checkbox = document.getElementById(`checkbox-${taskId}`);
+    const deleteBtn = document.getElementById(`delete-${taskId}`);
+    
+    // Disable controls during API call
+    duplicateBtn.disabled = true;
+    checkbox.disabled = true;
+    deleteBtn.disabled = true;
+    duplicateBtn.textContent = 'Duplicating...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/duplicate`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Task not found');
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Reload tasks to show the duplicate
+        await loadTasks();
+        
+    } catch (error) {
+        console.error('Error duplicating task:', error);
+        showError(error.message || 'Unable to duplicate task. Please try again.');
+        
+        // Re-enable controls
+        duplicateBtn.disabled = false;
+        checkbox.disabled = false;
+        deleteBtn.disabled = false;
+        duplicateBtn.textContent = 'Duplicate';
     }
 }
 
