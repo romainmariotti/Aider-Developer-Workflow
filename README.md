@@ -1,7 +1,7 @@
 # Students
-Romain Mariotti
-Matteo Berchtold
-Dylan Germanier
+- Romain Mariotti
+- Matteo Berchtold
+- Dylan Germanier
 
 
 # Task Manager API
