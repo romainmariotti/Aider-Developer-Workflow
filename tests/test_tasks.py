@@ -548,3 +548,197 @@ def test_duplicate_task_long_title(client: TestClient, session: Session):
     data = response.json()
     
     assert data["title"] == long_title + " (copy)"
+
+
+def test_delete_all_tasks_success(client: TestClient, session: Session):
+    """Test DELETE /tasks successfully clears all tasks and returns 204"""
+    # Create multiple tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2", completed=True)
+    task3 = Task(title="Task 3", description="Description 3")
+    session.add(task1)
+    session.add(task2)
+    session.add(task3)
+    session.commit()
+    
+    # Verify tasks exist
+    tasks_before = session.exec(select(Task)).all()
+    assert len(tasks_before) == 3
+    
+    # Delete all tasks
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    assert response.content == b""
+
+
+def test_delete_all_tasks_database_empty(client: TestClient, session: Session):
+    """Test that database is empty after DELETE /tasks"""
+    # Create some tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2")
+    session.add(task1)
+    session.add(task2)
+    session.commit()
+    
+    # Delete all tasks
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    
+    # Verify database is empty
+    session.expire_all()
+    remaining_tasks = session.exec(select(Task)).all()
+    assert len(remaining_tasks) == 0
+
+
+def test_delete_all_tasks_get_returns_empty_array(client: TestClient, session: Session):
+    """Test GET /tasks returns empty array after DELETE /tasks"""
+    # Create some tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2")
+    session.add(task1)
+    session.add(task2)
+    session.commit()
+    
+    # Delete all tasks
+    delete_response = client.delete("/tasks")
+    assert delete_response.status_code == 204
+    
+    # Verify GET returns empty array
+    get_response = client.get("/tasks")
+    assert get_response.status_code == 200
+    data = get_response.json()
+    assert data == []
+
+
+def test_delete_all_tasks_when_empty(client: TestClient, session: Session):
+    """Test DELETE /tasks returns 204 when database is already empty"""
+    # Verify database is empty
+    tasks = session.exec(select(Task)).all()
+    assert len(tasks) == 0
+    
+    # Delete all tasks (should succeed even when empty)
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    assert response.content == b""
+
+
+def test_delete_all_tasks_idempotent(client: TestClient, session: Session):
+    """Test calling DELETE /tasks multiple times returns 204"""
+    # Create a task
+    task = Task(title="Task 1", description="Description 1")
+    session.add(task)
+    session.commit()
+    
+    # First delete
+    response1 = client.delete("/tasks")
+    assert response1.status_code == 204
+    
+    # Second delete (database already empty)
+    response2 = client.delete("/tasks")
+    assert response2.status_code == 204
+    
+    # Third delete
+    response3 = client.delete("/tasks")
+    assert response3.status_code == 204
+    
+    # Verify database is still empty
+    session.expire_all()
+    tasks = session.exec(select(Task)).all()
+    assert len(tasks) == 0
+
+
+def test_delete_all_tasks_success(client: TestClient, session: Session):
+    """Test DELETE /tasks successfully clears all tasks and returns 204"""
+    # Create multiple tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2", completed=True)
+    task3 = Task(title="Task 3", description="Description 3")
+    session.add(task1)
+    session.add(task2)
+    session.add(task3)
+    session.commit()
+    
+    # Verify tasks exist
+    tasks_before = session.exec(select(Task)).all()
+    assert len(tasks_before) == 3
+    
+    # Delete all tasks
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    assert response.content == b""
+
+
+def test_delete_all_tasks_database_empty(client: TestClient, session: Session):
+    """Test that database is empty after DELETE /tasks"""
+    # Create some tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2")
+    session.add(task1)
+    session.add(task2)
+    session.commit()
+    
+    # Delete all tasks
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    
+    # Verify database is empty
+    session.expire_all()
+    remaining_tasks = session.exec(select(Task)).all()
+    assert len(remaining_tasks) == 0
+
+
+def test_delete_all_tasks_get_returns_empty_array(client: TestClient, session: Session):
+    """Test GET /tasks returns empty array after DELETE /tasks"""
+    # Create some tasks
+    task1 = Task(title="Task 1", description="Description 1")
+    task2 = Task(title="Task 2", description="Description 2")
+    session.add(task1)
+    session.add(task2)
+    session.commit()
+    
+    # Delete all tasks
+    delete_response = client.delete("/tasks")
+    assert delete_response.status_code == 204
+    
+    # Verify GET returns empty array
+    get_response = client.get("/tasks")
+    assert get_response.status_code == 200
+    data = get_response.json()
+    assert data == []
+
+
+def test_delete_all_tasks_when_empty(client: TestClient, session: Session):
+    """Test DELETE /tasks returns 204 when database is already empty"""
+    # Verify database is empty
+    tasks = session.exec(select(Task)).all()
+    assert len(tasks) == 0
+    
+    # Delete all tasks (should succeed even when empty)
+    response = client.delete("/tasks")
+    assert response.status_code == 204
+    assert response.content == b""
+
+
+def test_delete_all_tasks_idempotent(client: TestClient, session: Session):
+    """Test calling DELETE /tasks multiple times returns 204"""
+    # Create a task
+    task = Task(title="Task 1", description="Description 1")
+    session.add(task)
+    session.commit()
+    
+    # First delete
+    response1 = client.delete("/tasks")
+    assert response1.status_code == 204
+    
+    # Second delete (database already empty)
+    response2 = client.delete("/tasks")
+    assert response2.status_code == 204
+    
+    # Third delete
+    response3 = client.delete("/tasks")
+    assert response3.status_code == 204
+    
+    # Verify database is still empty
+    session.expire_all()
+    tasks = session.exec(select(Task)).all()
+    assert len(tasks) == 0

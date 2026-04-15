@@ -9,11 +9,14 @@ const submitBtn = document.getElementById('submit-btn');
 const titleError = document.getElementById('title-error');
 const errorContainer = document.getElementById('error-container');
 const tasksContainer = document.getElementById('tasks-container');
+const taskCounter = document.getElementById('task-counter');
+const clearAllBtn = document.getElementById('clear-all-btn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     loadTasks();
     createTaskForm.addEventListener('submit', handleCreateTask);
+    clearAllBtn.addEventListener('click', handleClearAllTasks);
 });
 
 // Show error message
@@ -29,6 +32,11 @@ function showError(message) {
 function clearError() {
     errorContainer.style.display = 'none';
     titleError.textContent = '';
+}
+
+// Update task counter
+function updateTaskCounter(count) {
+    taskCounter.textContent = `Tasks: ${count}`;
 }
 
 // Validate title
@@ -52,9 +60,11 @@ async function loadTasks() {
         
         const tasks = await response.json();
         renderTasks(tasks);
+        updateTaskCounter(tasks.length);
     } catch (error) {
         console.error('Error loading tasks:', error);
         tasksContainer.innerHTML = '<p class="empty-state">Unable to connect to the API. Please try again later.</p>';
+        updateTaskCounter(0);
     }
 }
 
@@ -287,5 +297,38 @@ async function handleDeleteTask(taskId) {
         deleteBtn.disabled = false;
         checkbox.disabled = false;
         deleteBtn.textContent = 'Delete';
+    }
+}
+
+// Handle clear all tasks
+async function handleClearAllTasks() {
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete all tasks?');
+    if (!confirmed) {
+        return;
+    }
+    
+    // Disable button during API call
+    clearAllBtn.disabled = true;
+    clearAllBtn.textContent = 'Clearing...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/tasks`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Reload tasks to show empty state
+        await loadTasks();
+        
+    } catch (error) {
+        console.error('Error clearing tasks:', error);
+        showError(error.message || 'Unable to clear tasks. Please try again.');
+    } finally {
+        clearAllBtn.disabled = false;
+        clearAllBtn.textContent = 'Clear all';
     }
 }

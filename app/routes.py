@@ -107,3 +107,23 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
     session.delete(task)
     session.commit()
     return None
+
+
+@router.delete("", status_code=204)
+def delete_all_tasks(session: Session = Depends(get_session)):
+    """Delete all tasks"""
+    tasks = session.exec(select(Task)).all()
+    for task in tasks:
+        session.delete(task)
+    session.commit()
+    return None
+
+
+@router.delete("", status_code=204)
+def delete_all_tasks(session: Session = Depends(get_session)):
+    """Delete all tasks"""
+    tasks = session.exec(select(Task)).all()
+    for task in tasks:
+        session.delete(task)
+    session.commit()
+    return None

@@ -113,6 +113,29 @@ button:disabled {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.task-counter {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.clear-all-btn {
+    background-color: #e74c3c;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.clear-all-btn:hover:not(:disabled) {
+    background-color: #c0392b;
+}
+
 #tasks-container {
     margin-top: 15px;
 }
