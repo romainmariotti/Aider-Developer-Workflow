@@ -1,3 +1,9 @@
+# Students
+Romain Mariotti
+Matteo Berchtold
+Dylan Germanier
+
+
 # Task Manager API
 
 A REST API built with FastAPI and SQLModel, developed using an AI-assisted developer workflow with [Aider](https://aider.chat/).
